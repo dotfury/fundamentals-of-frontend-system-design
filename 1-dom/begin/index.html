@@ -7,17 +7,21 @@
 </head>
 <body>
 <main id="container"></main>
-</body>
-<script>
-    const container = document.getElementById('container');
-    const html = `<article class="card">
+
+<template id="card_template">
+  <article class="card">
     <h3 class="card__title"></h3>
     <div class="card__body">
       <div class='card__body__image'></div>
       <section class='card__body__content'>
       </section>
     </div>
-  </article>`;
+  </article>
+</template>
+</body>
+<script>
+    const container = document.getElementById('container');
+    const template = document.getElementById('card_template');
 
     /**
      * @param {string} title
@@ -27,6 +31,11 @@
      */
     function createCardComponent(title, body) {
         // @todo - Implement function
+        const card = template.content.cloneNode(true).firstElementChild;
+        card.querySelector('.card__title').textContent = title;
+        card.querySelector('.card__body__content').textContent = body;
+
+        return card;
     }
 
     const component = createCardComponent(

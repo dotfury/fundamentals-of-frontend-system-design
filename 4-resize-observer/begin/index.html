@@ -44,6 +44,10 @@
         .box:nth-child(4) {
             background: rgba(0, 0, 255, 0.5);
         }
+        .circled {
+          border-radius: 100%;
+          border: 4px;
+        }
     </style>
 </head>
 <body>
@@ -62,15 +66,32 @@
     </div>
 </main>
 <script type="module">
-    /*
-     * 1. Initiate Resize observer
-     * 2. Implement callback - use inlineSize and blockSize of the entries for width and height
-     * 3. If width and height is less than 150px
-     *   3.1 - Apply border-radius: 100%
-     *   3.2 - Apply border-width: 4px
-     * 4. If width and height is more than 150px = unset the properties above
-     * 5. All 4 boxes should use same observer
-     */
+  /*
+    * 1. Initiate Resize observer
+    * 2. Implement callback - use inlineSize and blockSize of the entries for width and height
+    * 3. If width and height is less than 150px
+    *   3.1 - Apply border-radius: 100%
+    *   3.2 - Apply border-width: 4px
+    * 4. If width and height is more than 150px = unset the properties above
+    * 5. All 4 boxes should use same observer
+    */
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const target = entry.target;
+        const box = entry.borderBoxSize[0];
+
+        if (box.blockSize < 150 && box.inlineSize < 150) {
+          target.classList.add('circled');
+        } else {
+          target.classList.remove('circled');
+        }
+      }
+    });
+
+    const boxes = document.querySelectorAll('.box');
+
+    boxes.forEach((box) => observer.observe(box));
 </script>
 </body>
 </html>

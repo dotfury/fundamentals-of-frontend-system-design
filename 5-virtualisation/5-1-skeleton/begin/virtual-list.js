@@ -90,13 +90,22 @@ export class VirtualList {
          * Part 1 - App Skeleton
          *  @todo
          */
-        return ``.trim();
+        return `<div id="container">
+            <div id="top-observer">Top Observer</div>
+            <div id="virtual-list"></div>
+            <div id="bottom-observer">Bottom Observer</div>
+        </div>`.trim();
     }
 
     /**
      * @returns void
      */
     #effect() {
+        intersectionObserver(getObservers(), (entries) => {
+            this.#handleIntersectionObserver(entries)
+        }, {
+            threshold: 0.2
+        })
     }
 
     /**
@@ -111,7 +120,18 @@ export class VirtualList {
      * Handles observer intersection entries
      * @param entries {IntersectionObserverEntry[]}
      */
-    #handleIntersectionObserver(entries) {}
+    #handleIntersectionObserver(entries) {
+        for (const entry of entries) {
+            console.log(entry.target.id);
+            if (entry.isIntersecting) {
+                if (entry.target.id === 'top-observer') {
+                    void this.#handleTopObserver();
+                } else {
+                    void this.#handleBottomObserver();
+                }
+            }
+        }
+    }
 
     async #handleBottomObserver() {}
 

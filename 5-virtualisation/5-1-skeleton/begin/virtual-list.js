@@ -73,8 +73,12 @@ export class VirtualList {
      * }}
      */
     constructor(root, props) {
-        this.props = {...props};
-        this.root = root;
+      this.props = {...props};
+      this.root = root;
+      this.start = 0;
+      this.end = 0;
+      this.limit = props.pageSize * 2;
+      this.pool = [];
     }
 
     /**
@@ -86,34 +90,34 @@ export class VirtualList {
      * @returns {string}
      */
     toHTML() {
-        /**
-         * Part 1 - App Skeleton
-         *  @todo
-         */
-        return `<div id="container">
-            <div id="top-observer">Top Observer</div>
-            <div id="virtual-list"></div>
-            <div id="bottom-observer">Bottom Observer</div>
-        </div>`.trim();
+      /**
+       * Part 1 - App Skeleton
+       *  @todo
+       */
+      return `<div id="container">
+          <div id="top-observer">Top Observer</div>
+          <div id="virtual-list"></div>
+          <div id="bottom-observer">Bottom Observer</div>
+      </div>`.trim();
     }
 
     /**
      * @returns void
      */
     #effect() {
-        intersectionObserver(getObservers(), (entries) => {
-            this.#handleIntersectionObserver(entries)
-        }, {
-            threshold: 0.2
-        })
+      intersectionObserver(getObservers(), (entries) => {
+        this.#handleIntersectionObserver(entries)
+      }, {
+        threshold: 0.2
+      });
     }
 
     /**
      * @returns void
      */
     render() {
-        this.root.innerHTML = this.toHTML();
-        this.#effect()
+      this.root.innerHTML = this.toHTML();
+      this.#effect()
     }
 
     /**
@@ -121,19 +125,39 @@ export class VirtualList {
      * @param entries {IntersectionObserverEntry[]}
      */
     #handleIntersectionObserver(entries) {
-        for (const entry of entries) {
-            console.log(entry.target.id);
-            if (entry.isIntersecting) {
-                if (entry.target.id === 'top-observer') {
-                    void this.#handleTopObserver();
-                } else {
-                    void this.#handleBottomObserver();
-                }
-            }
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          if (entry.target.id === 'top-observer') {
+            void this.#handleTopObserver();
+          } else {
+            void this.#handleBottomObserver();
+          }
         }
+      }
     }
 
-    async #handleBottomObserver() {}
+    async #handleBottomObserver() {
+      const data = await this.props.getPage(this.end++);
+
+      if (this.pool.length < this.limit) {
+        const list = getVirtualList();
+        const fragment = new DocumentFragment();
+  
+        for (const datum of data) {
+          const card = this.props.getTemplate(datum);
+          fragment.appendChild(card);
+          this.pool.push(card);
+        }
+  
+        list.appendChild(fragment);
+      } else {
+        // split the data and make the second half the first half
+        const [toRecycle, unchanged] = [this.pool.slice(0, this.props.pageSize), this.pool.slice(this.props.pageSize)];
+
+        this.pool = unchanged.concat(toRecycle);
+        this.#updateData(toRecycle, data);
+      }
+    }
 
     async #handleTopObserver() {}
 
@@ -145,7 +169,9 @@ export class VirtualList {
      * @param data {T[]} - Data to use for update
      */
     #updateData(elements, data) {
-
+      for (let i = 0; i < data.length; i++) {
+        this.props.updateTemplate(data[i], elements[i]);
+      }
     }
 
     /**

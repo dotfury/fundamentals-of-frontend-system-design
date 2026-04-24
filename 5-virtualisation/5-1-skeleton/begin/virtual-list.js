@@ -157,6 +157,8 @@ export class VirtualList {
         this.pool = unchanged.concat(toRecycle);
         this.#updateData(toRecycle, data);
       }
+
+      this.#updateElementsPosition('down');
     }
 
     async #handleTopObserver() {}
@@ -180,11 +182,30 @@ export class VirtualList {
      * @param direction {"top" | "down" }
      */
     #updateElementsPosition(direction) {
-        const [top, bottom] = getObservers();
-        if (direction === 'down') {
+      const [top, bottom] = getObservers();
+      if (direction === 'down') {
+        for (let i = 0; i < this.pool.length; i++) {
+          const [prev, current] = [this.pool[i - 1], this.pool[i]];
 
-        } else if (direction === 'top') {
-            // To implement
+          if (y(prev) === null) {
+            y(current, 0);
+          } else {
+            const newY = y(prev) + MARGIN * 2 + prev.getBoundingClientRect().height;
+            y(current, newY);
+
+            current.style.transform = translateY(newY);
+          }
         }
+      } else if (direction === 'top') {
+          // To implement
+      }
+
+      // move observers
+      const [first, last] = [this.pool[0], this.pool.at(-1)];
+      const topY = y(first);
+      const bottomY = y(last) + MARGIN * 2 + last.getBoundingClientRect().height;
+
+      top.style.transform = translateY(topY);
+      bottom.style.transform = translateY(bottomY);
     }
 }
